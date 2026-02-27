@@ -2,6 +2,7 @@ package br.com.fiap.ms_produto.service;
 
 import br.com.fiap.ms_produto.dto.ProdutoDTO;
 import br.com.fiap.ms_produto.entities.Produto;
+import br.com.fiap.ms_produto.exceptions.ResourceNotFoundException;
 import br.com.fiap.ms_produto.repositories.ProdutoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +27,7 @@ public class ProdutoService {
     @Transactional(readOnly = true)
     public ProdutoDTO findProdutoById(Long id){
         Produto produto = produtoRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("Recurso não encontrado. ID: " + id)
+                () -> new ResourceNotFoundException("Recurso não encontrado. ID: " + id)
         );
 
         return new ProdutoDTO(produto);
@@ -54,14 +55,14 @@ public class ProdutoService {
             produto = produtoRepository.save(produto);
             return new ProdutoDTO(produto);
         }catch (EntityNotFoundException e){
-            throw new EntityNotFoundException("Recurso não encontrado. ID: " + id);
+            throw new ResourceNotFoundException("Recurso não encontrado. ID: " + id);
         }
     }
 
     @Transactional
     public void deleteProdutoById(Long id){
         if (!produtoRepository.existsById(id)){
-            throw new EntityNotFoundException("Revurso não encontrado. ID: " + id);
+            throw new ResourceNotFoundException("Revurso não encontrado. ID: " + id);
         }
 
         produtoRepository.deleteById(id);
