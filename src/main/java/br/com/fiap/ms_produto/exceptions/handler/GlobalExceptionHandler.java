@@ -1,5 +1,6 @@
 package br.com.fiap.ms_produto.exceptions.handler;
 
+import br.com.fiap.ms_produto.exceptions.DataBaseException;
 import br.com.fiap.ms_produto.exceptions.ResourceNotFoundException;
 import br.com.fiap.ms_produto.exceptions.dto.CustomErrorDTO;
 import br.com.fiap.ms_produto.exceptions.dto.ValidationErrorDTO;
@@ -54,6 +55,25 @@ public class GlobalExceptionHandler {
         HttpStatus status = HttpStatus.BAD_REQUEST;
         CustomErrorDTO err = new CustomErrorDTO(Instant.now(), status.value(), "Requisição inválida (parâmetro com tipo/formato incorreto)", request.getRequestURI());
 
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(DataBaseException.class)
+    public ResponseEntity<CustomErrorDTO>handleDataBase(DataBaseException e, HttpServletRequest request){
+        HttpStatus status = HttpStatus.CONFLICT;
+        CustomErrorDTO err = new CustomErrorDTO(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
+
+        return ResponseEntity.status(status).body(err);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<CustomErrorDTO>handleGenericException(Exception e, HttpServletRequest request){
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; //500
+        CustomErrorDTO err = new CustomErrorDTO(
+                Instant.now(), status.value(),
+                "Erro interno inesperado",
+                request.getRequestURI()
+        );
         return ResponseEntity.status(status).body(err);
     }
 

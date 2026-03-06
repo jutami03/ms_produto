@@ -1,10 +1,14 @@
 package br.com.fiap.ms_produto.service;
 
 import br.com.fiap.ms_produto.dto.ProdutoDTO;
+import br.com.fiap.ms_produto.entities.Categoria;
 import br.com.fiap.ms_produto.entities.Produto;
+import br.com.fiap.ms_produto.exceptions.DataBaseException;
 import br.com.fiap.ms_produto.exceptions.ResourceNotFoundException;
+import br.com.fiap.ms_produto.repositories.CategoriaRepository;
 import br.com.fiap.ms_produto.repositories.ProdutoRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,6 +20,9 @@ public class ProdutoService {
 
     @Autowired
     private ProdutoRepository produtoRepository;
+
+    @Autowired
+    private CategoriaRepository categoriaRepository;
 
     @Transactional(readOnly = true)
     public List<ProdutoDTO> findAllProdutos(){
@@ -35,16 +42,25 @@ public class ProdutoService {
 
     @Transactional
     public ProdutoDTO saveProduto(ProdutoDTO produtoDTO){
-        Produto produto = new Produto();
-        copyDtoToProduto(produtoDTO, produto);
-        produto = produtoRepository.save(produto);
-        return new ProdutoDTO(produto);
+        try {
+            Produto produto = new Produto();
+            copyDtoToProduto(produtoDTO, produto);
+            produto = produtoRepository.save(produto);
+            return new ProdutoDTO(produto);
+        }catch (DataIntegrityViolationException e){
+            throw new DataBaseException("Não foi possível salvar o Produto. Cetegoria inexistente " +
+                    "(ID: " + produtoDTO.getCategoria().getId() + ")");
+        }
     }
 
     private void copyDtoToProduto(ProdutoDTO produtoDTO, Produto produto){
         produto.setNome(produtoDTO.getNome());
         produto.setDescricao(produtoDTO.getDescricao());
         produto.setValor(produtoDTO.getValor());
+
+        Categoria categoria = categoriaRepository
+                .getReferenceById(produtoDTO.getCategoria().getId());
+        produto.setCategoria(categoria);
     }
 
     @Transactional
@@ -67,4 +83,5 @@ public class ProdutoService {
 
         produtoRepository.deleteById(id);
     }
+
 }
